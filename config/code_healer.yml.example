@@ -1,0 +1,104 @@
+---
+# CodeHealer Configuration Example
+# Copy this file to config/code_healer.yml and customize for your project
+
+enabled: true
+
+# Classes that are allowed to evolve
+allowed_classes:
+  - User
+  - Order
+  - PaymentProcessor
+  - InventoryManager
+  - Api::UserController
+  - Api::OrderController
+
+# Classes that should never evolve
+excluded_classes:
+  - ApplicationController
+  - ApplicationRecord
+  - ApplicationJob
+  - ApplicationMailer
+
+# Error types that should trigger evolution
+allowed_error_types:
+  - ArgumentError
+  - NameError
+  - NoMethodError
+  - TypeError
+  - ValidationError
+
+# Evolution Strategy Configuration
+evolution_strategy:
+  method: "api"  # Options: "api", "claude_code_terminal", "hybrid"
+  fallback_to_api: true  # If Claude Code fails, fall back to API
+
+# Claude Code Terminal Configuration (for local AI agent)
+claude_code:
+  enabled: true
+  timeout: 300  # 5 minutes timeout
+  max_file_changes: 10
+  include_tests: true
+  command_template: "claude --print '{prompt}' --output-format text --permission-mode acceptEdits --allowedTools Edit"
+  business_context_sources:
+    - "config/business_rules.yml"
+    - "docs/business_logic.md"
+    - "spec/business_context_specs.rb"
+
+# Business Context Configuration
+business_context:
+  enabled: true
+  
+  # Define business rules for specific classes
+  User:
+    domain: "User Management"
+    key_rules:
+      - "Email must be unique and valid"
+      - "Password must meet security requirements"
+      - "User data must be validated"
+    validation_patterns:
+      - "Email format validation"
+      - "Password strength requirements"
+      - "Data integrity checks"
+  
+  Order:
+    domain: "E-commerce Order Processing"
+    key_rules:
+      - "Orders must have valid customer information"
+      - "Payment validation is required"
+      - "Inventory must be checked before processing"
+    validation_patterns:
+      - "Input validation for all parameters"
+      - "Business rule enforcement"
+      - "Error handling with meaningful messages"
+
+# API Configuration (for OpenAI integration)
+api:
+  provider: "openai"
+  model: "gpt-4"
+  max_tokens: 2000
+  temperature: 0.1
+
+# Git Configuration
+git:
+  auto_commit: true
+  auto_push: true
+  branch_prefix: evolve
+  commit_message_template: 'Fix {class_name}##{method_name}: {error_type}'
+  pr_target_branch: main  # or your preferred target branch
+
+# Pull Request Configuration
+pull_request:
+  enabled: true
+  auto_create: true
+  title_template: 'Fix {class_name}##{method_name}: Handle {error_type}'
+  labels:
+    - "auto-fix"
+    - "self-evolving"
+    - "bug-fix"
+
+# Sidekiq Configuration (for background processing)
+sidekiq:
+  queue: "evolution"
+  retry: 3
+  backtrace: true

@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# This executable provides the code_healer-setup command
+# It loads the setup script from the gem's lib directory
+
+require_relative '../lib/code_healer/setup'
