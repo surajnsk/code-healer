@@ -25,15 +25,15 @@ Gem::Specification.new do |spec|
     - 🎨 Configurable via YAML files
   DESC
   
-  spec.homepage = "https://github.com/deepan-g2"
+  spec.homepage = "https://github.com/deepan-g2/code-healer"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 2.7.0"
 
-  spec.metadata["homepage_uri"] = "https://github.com/deepan-g2"
-  spec.metadata["source_code_uri"] = "https://github.com/deepan-g2"
-  spec.metadata["changelog_uri"] = "https://github.com/deepan-g2"
-  spec.metadata["bug_tracker_uri"] = "https://github.com/deepan-g2"
-  spec.metadata["documentation_uri"] = "https://github.com/deepan-g2"
+  spec.metadata["homepage_uri"] = "https://github.com/deepan-g2/code-healer"
+  spec.metadata["source_code_uri"] = "https://github.com/deepan-g2/code-healer"
+  spec.metadata["changelog_uri"] = "https://github.com/deepan-g2/code-healer/blob/main/CHANGELOG.md"
+  spec.metadata["bug_tracker_uri"] = "https://github.com/deepan-g2/code-healer/issues"
+  spec.metadata["documentation_uri"] = "https://github.com/deepan-g2/code-healer/blob/main/README.md"
 
   # Specify which files should be added to the gem when it is released
   spec.files = Dir[
