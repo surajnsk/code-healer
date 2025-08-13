@@ -1,0 +1,71 @@
+# Gem build artifacts
+*.gem
+
+# Ruby
+*.rbc
+*.so
+*.dll
+*.dylib
+*.bundle
+*.o
+*.a
+mkmf.log
+Makefile
+
+# Bundler
+.bundle/
+vendor/bundle
+lib/bundler/man/
+
+# RVM
+.rvmrc
+
+# rbenv
+.ruby-version
+.ruby-gemset
+
+# RSpec
+.rspec
+spec/examples.txt
+
+# Coverage
+coverage/
+.coveralls.yml
+
+# Documentation
+doc/
+.yardoc/
+.yard/
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+log/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
