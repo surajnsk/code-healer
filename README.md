@@ -558,8 +558,6 @@ business_context:
 ## 📚 Documentation
 
 - [Installation Guide](docs/INSTALLATION.md)
-- [Configuration Reference](docs/CONFIGURATION.md)
-- [API Documentation](docs/API.md)
 - [Examples](examples/)
 
 ## 🤝 Contributing
@@ -576,16 +574,21 @@ This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.t
 
 ## 🙏 Acknowledgments
 
-- Built with ❤️ by the CodeHealer Team
-- Powered by OpenAI's GPT models
+- Built with ❤️ by Deepan Kumar
+- Powered by OpenAI's GPT models and Claude AI
 - Inspired by the need for self-healing applications
 
 ## 📞 Support
 
-- 📧 Email: support@code-healer.com
+- 📧 Email: deepan.ppgit@gmail.com
+- 🔗 LinkedIn: [Deepan Kumar](https://www.linkedin.com/in/deepan-kumar-5972a0a8/)
 - 🐛 Issues: [GitHub Issues](https://github.com/deepan-g2/code-healer/issues)
 - 📖 Documentation: [docs.code-healer.com](https://docs.code-healer.com)
 
 ---
 
 **CodeHealer** - Because your code deserves to heal itself! 🏥✨
+
+---
+
+**Built with ❤️ by [Deepan Kumar](https://www.linkedin.com/in/deepan-kumar-5972a0a8/)**
