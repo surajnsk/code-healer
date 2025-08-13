@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-01-14
+
+### Changed
+- **Significantly improved README documentation**
+- Enhanced setup instructions with interactive bash script guidance
+- Added comprehensive configuration explanations for all 50+ options
+- Included detailed markdown file creation guide for business context
+- Added best practices and troubleshooting sections
+- Improved installation and configuration examples
+- Enhanced advanced configuration strategies documentation
+
+### Fixed
+- Updated repository URLs in gemspec to point to correct GitHub repo
+- Fixed executable path configuration in gemspec
+
 ## [Unreleased]
 
 ### Added
