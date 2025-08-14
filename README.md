@@ -270,6 +270,34 @@ When you hit an endpoint that triggers this error, CodeHealer will:
 
 Check your Sidekiq dashboard at `http://localhost:3000/sidekiq` to see healing jobs in action.
 
+## 🚀 Future Plans & Roadmap
+
+CodeHealer is actively developed with a focus on **real-world developer workflows**. Here's what's coming:
+
+### **🔄 Q2 2025: Business Context Automation**
+- **Jira integration** - Automatically pull business requirements from tickets
+- **Confluence docs** - Extract domain knowledge from existing documentation
+- **PRD (Product Requirements Document) parsing** - Understand feature specifications
+- **Git commit message analysis** - Learn business context from commit history
+- **Slack/Teams integration** - Capture business discussions and decisions
+
+### ** Q3 2025: Intelligent Context Discovery**
+- **Automatic business rule extraction** - AI discovers patterns in your existing code
+- **Domain knowledge mining** - Extract business logic from model validations
+- **API documentation parsing** - Understand business rules from API specs
+- **Database schema analysis** - Infer business rules from data relationships
+- **Test case analysis** - Learn business logic from existing test scenarios
+
+---
+
+**💡 Have ideas for tool integrations?** We'd love to hear from you!
+- **Open an issue** with your integration request
+- **Join discussions** in our GitHub Discussions
+- **Contribute code** to help build the future
+- **Share your workflow** to influence the roadmap
+
+**🚀 The future of development is context-aware, and CodeHealer is making it automatic!**
+
 ## 🔧 Advanced Configuration
 
 ### 🎯 Interactive Setup Script
