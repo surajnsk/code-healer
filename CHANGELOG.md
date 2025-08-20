@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2025-01-14
+
+### Added
+- **Comprehensive logging** for isolated healing workspace system
+- **Detailed workspace creation logs** showing each step of the process
+- **Clone operation logging** with success/failure status
+- **Fix application logging** in isolated environment
+- **Workspace cleanup logging** for debugging
+
+### Fixed
+- **Workspace configuration reading** to handle both string and symbol keys
+- **Branch name sanitization** to prevent invalid Git branch names
+
 ## [0.1.3] - 2025-01-14
 
 ### Added

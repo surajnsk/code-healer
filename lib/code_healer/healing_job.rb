@@ -7,15 +7,23 @@ module CodeHealer
     sidekiq_options retry: 3, backtrace: true, queue: 'evolution'
 
     def perform(*args)
+      puts "🚀 [HEALING_JOB] Starting job with args: #{args.inspect}"
+      
       # Support both legacy and new invocation styles
       error, class_name, method_name, evolution_method, backtrace = parse_args(args)
+      
+      puts "🚀 [HEALING_JOB] Parsed args - Error: #{error.class}, Class: #{class_name}, Method: #{method_name}, Evolution: #{evolution_method}"
+      puts "🚀 [HEALING_JOB] Backtrace length: #{backtrace&.length || 0}"
 
       puts "🚀 Evolution Job Started: #{class_name}##{method_name}"
 
+            puts "🏥 [HEALING_JOB] About to create isolated healing workspace..."
       # Create isolated healing workspace
       workspace_path = create_healing_workspace(class_name, method_name)
-
+      puts "🏥 [HEALING_JOB] Workspace created: #{workspace_path}"
+      
       begin
+        puts "🔧 [HEALING_JOB] About to apply fixes in isolated environment..."
         # Apply fixes in isolated environment
         success = apply_fixes_in_workspace(workspace_path, error, class_name, method_name, evolution_method)
 

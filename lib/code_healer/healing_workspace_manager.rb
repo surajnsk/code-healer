@@ -6,26 +6,44 @@ module CodeHealer
   class HealingWorkspaceManager
     class << self
       def create_healing_workspace(repo_path, branch_name = nil)
+        puts "🏥 [WORKSPACE] Starting workspace creation..."
+        puts "🏥 [WORKSPACE] Repo path: #{repo_path}"
+        puts "🏥 [WORKSPACE] Branch name: #{branch_name || 'current'}"
+        
         config = CodeHealer::ConfigManager.code_heal_directory_config
+        puts "🏥 [WORKSPACE] Raw config: #{config.inspect}"
+        
+        base_path = config['path'] || config[:path] || '/tmp/code_healer_workspaces'
+        puts "🏥 [WORKSPACE] Base heal dir: #{base_path}"
         
         # Create unique workspace directory
         workspace_id = "healing_#{Time.now.to_i}_#{SecureRandom.hex(4)}"
-        workspace_path = File.join(config[:path], workspace_id)
+        workspace_path = File.join(base_path, workspace_id)
         
-        puts "🏥 Creating healing workspace: #{workspace_path}"
+        puts "🏥 [WORKSPACE] Workspace ID: #{workspace_id}"
+        puts "🏥 [WORKSPACE] Full workspace path: #{workspace_path}"
         
         begin
+          puts "🏥 [WORKSPACE] Creating base directory..."
           # Ensure code heal directory exists
-          FileUtils.mkdir_p(config[:path])
+          FileUtils.mkdir_p(base_path)
+          puts "🏥 [WORKSPACE] Base directory created/verified: #{base_path}"
           
           # Clone current branch to workspace
-          if clone_strategy == "branch"
+          strategy = clone_strategy
+          puts "🏥 [WORKSPACE] Clone strategy: #{strategy}"
+          
+          if strategy == "branch"
+            puts "🏥 [WORKSPACE] Using branch-only cloning..."
             clone_current_branch(repo_path, workspace_path, branch_name)
           else
+            puts "🏥 [WORKSPACE] Using full repo cloning..."
             clone_full_repo(repo_path, workspace_path, branch_name)
           end
           
-          puts "✅ Healing workspace created successfully"
+          puts "🏥 [WORKSPACE] Workspace creation completed successfully!"
+          puts "🏥 [WORKSPACE] Final workspace path: #{workspace_path}"
+          puts "🏥 [WORKSPACE] Workspace contents: #{Dir.entries(workspace_path).join(', ')}"
           workspace_path
         rescue => e
           puts "❌ Failed to create healing workspace: #{e.message}"
@@ -35,17 +53,27 @@ module CodeHealer
       end
       
       def apply_fixes_in_workspace(workspace_path, fixes, class_name, method_name)
-        puts "🔧 Applying fixes in workspace: #{workspace_path}"
+        puts "🔧 [WORKSPACE] Starting fix application..."
+        puts "🔧 [WORKSPACE] Workspace: #{workspace_path}"
+        puts "🔧 [WORKSPACE] Class: #{class_name}, Method: #{method_name}"
+        puts "🔧 [WORKSPACE] Fixes to apply: #{fixes.inspect}"
         
         begin
+          puts "🔧 [WORKSPACE] Processing #{fixes.length} fixes..."
           # Apply each fix to the workspace
-          fixes.each do |fix|
+          fixes.each_with_index do |fix, index|
+            puts "🔧 [WORKSPACE] Processing fix #{index + 1}: #{fix.inspect}"
             file_path = File.join(workspace_path, fix[:file_path])
+            puts "🔧 [WORKSPACE] Target file: #{file_path}"
+            puts "🔧 [WORKSPACE] File exists: #{File.exist?(file_path)}"
+            
             next unless File.exist?(file_path)
             
+            puts "🔧 [WORKSPACE] Creating backup..."
             # Backup original file
             backup_file(file_path)
             
+            puts "🔧 [WORKSPACE] Applying fix to file..."
             # Apply the fix
             apply_fix_to_file(file_path, fix[:new_code], class_name, method_name)
           end
@@ -127,24 +155,34 @@ module CodeHealer
       end
       
       def cleanup_workspace(workspace_path)
+        puts "🧹 [WORKSPACE] Starting workspace cleanup..."
+        puts "🧹 [WORKSPACE] Target: #{workspace_path}"
+        puts "🧹 [WORKSPACE] Exists: #{Dir.exist?(workspace_path)}"
+        
         return unless Dir.exist?(workspace_path)
         
-        puts "🧹 Cleaning up workspace: #{workspace_path}"
+        puts "🧹 [WORKSPACE] Removing workspace directory..."
         FileUtils.rm_rf(workspace_path)
-        puts "✅ Workspace cleaned up"
+        puts "🧹 [WORKSPACE] Workspace cleanup completed"
+        puts "🧹 [WORKSPACE] Directory still exists: #{Dir.exist?(workspace_path)}"
       end
       
       def cleanup_expired_workspaces
         config = CodeHealer::ConfigManager.code_heal_directory_config
-        return unless config[:auto_cleanup]
+        auto_cleanup = config['auto_cleanup']
+        auto_cleanup = config[:auto_cleanup] if auto_cleanup.nil?
+        return unless auto_cleanup
         
         puts "🧹 Cleaning up expired healing workspaces"
         
-        Dir.glob(File.join(config[:path], "healing_*")).each do |workspace_path|
+        base_path = config['path'] || config[:path] || '/tmp/code_healer_workspaces'
+        Dir.glob(File.join(base_path, "healing_*")).each do |workspace_path|
           next unless Dir.exist?(workspace_path)
           
           # Check if workspace is expired
-          if workspace_expired?(workspace_path, config[:cleanup_after_hours])
+          hours = config['cleanup_after_hours'] || config[:cleanup_after_hours]
+          hours = hours.to_i if hours
+          if workspace_expired?(workspace_path, hours)
             cleanup_workspace(workspace_path)
           end
         end
@@ -153,33 +191,54 @@ module CodeHealer
       private
       
       def clone_strategy
-        CodeHealer::ConfigManager.code_heal_directory_config[:clone_strategy] || "branch"
+        cfg = CodeHealer::ConfigManager.code_heal_directory_config
+        cfg['clone_strategy'] || cfg[:clone_strategy] || "branch"
       end
       
       def clone_current_branch(repo_path, workspace_path, branch_name)
+        puts "🌿 [WORKSPACE] Starting branch cloning..."
         Dir.chdir(repo_path) do
           current_branch = branch_name || `git branch --show-current`.strip
-          puts "🌿 Cloning current branch: #{current_branch}"
+          puts "🌿 [WORKSPACE] Current branch: #{current_branch}"
+          puts "🌿 [WORKSPACE] Executing: git clone --single-branch --branch #{current_branch} #{repo_path} #{workspace_path}"
           
           # Clone only the current branch
-          system("git clone --single-branch --branch #{current_branch} #{repo_path} #{workspace_path}")
+          result = system("git clone --single-branch --branch #{current_branch} #{repo_path} #{workspace_path}")
+          puts "🌿 [WORKSPACE] Clone result: #{result ? 'SUCCESS' : 'FAILED'}"
           
-          # Remove .git to avoid conflicts
-          FileUtils.rm_rf(File.join(workspace_path, '.git'))
+          if result
+            puts "🌿 [WORKSPACE] Removing .git to avoid conflicts..."
+            # Remove .git to avoid conflicts
+            FileUtils.rm_rf(File.join(workspace_path, '.git'))
+            puts "🌿 [WORKSPACE] .git removed successfully"
+          else
+            puts "🌿 [WORKSPACE] Clone failed, checking workspace..."
+            puts "🌿 [WORKSPACE] Workspace exists: #{Dir.exist?(workspace_path)}"
+            puts "🌿 [WORKSPACE] Workspace contents: #{Dir.exist?(workspace_path) ? Dir.entries(workspace_path).join(', ') : 'N/A'}"
+          end
         end
       end
       
       def clone_full_repo(repo_path, workspace_path, branch_name)
+        puts "🌿 [WORKSPACE] Starting full repo cloning..."
         Dir.chdir(repo_path) do
           current_branch = branch_name || `git branch --show-current`.strip
-          puts "🌿 Cloning full repository, switching to: #{current_branch}"
+          puts "🌿 [WORKSPACE] Target branch: #{current_branch}"
+          puts "🌿 [WORKSPACE] Executing: git clone #{repo_path} #{workspace_path}"
           
           # Clone full repo
-          system("git clone #{repo_path} #{workspace_path}")
+          result = system("git clone #{repo_path} #{workspace_path}")
+          puts "🌿 [WORKSPACE] Clone result: #{result ? 'SUCCESS' : 'FAILED'}"
           
-          # Switch to specific branch
-          Dir.chdir(workspace_path) do
-            system("git checkout #{current_branch}")
+          if result
+            puts "🌿 [WORKSPACE] Switching to branch: #{current_branch}"
+            # Switch to specific branch
+            Dir.chdir(workspace_path) do
+              checkout_result = system("git checkout #{current_branch}")
+              puts "🌿 [WORKSPACE] Checkout result: #{checkout_result ? 'SUCCESS' : 'FAILED'}"
+            end
+          else
+            puts "🌿 [WORKSPACE] Full repo clone failed"
           end
         end
       end
