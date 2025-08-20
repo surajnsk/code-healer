@@ -99,6 +99,27 @@ module CodeHealer
       def git_settings
         config['git'] || {}
       end
+      
+      # Code Heal Directory Configuration
+      def code_heal_directory_config
+        config['code_heal_directory'] || {}
+      end
+      
+      def code_heal_directory_path
+        code_heal_directory_config['path'] || '/tmp/code_healer_workspaces'
+      end
+      
+      def auto_cleanup_workspaces?
+        code_heal_directory_config['auto_cleanup'] != false
+      end
+      
+      def workspace_cleanup_after_hours
+        code_heal_directory_config['cleanup_after_hours'] || 24
+      end
+      
+      def max_workspaces
+        code_heal_directory_config['max_workspaces'] || 10
+      end
 
       def pull_request_settings
         config['pull_request'] || {}
@@ -267,6 +288,13 @@ module CodeHealer
           'safety' => {
             'backup_before_evolution' => true,
             'rollback_on_syntax_error' => true
+          },
+          'code_heal_directory' => {
+            'path' => '/tmp/code_healer_workspaces',
+            'auto_cleanup' => true,
+            'cleanup_after_hours' => 24,
+            'max_workspaces' => 10,
+            'clone_strategy' => 'branch'
           }
         }
       end

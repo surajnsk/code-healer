@@ -153,6 +153,17 @@ puts "🌿 Git Branch Configuration:"
 branch_prefix = ask_for_input("Enter branch prefix for healing branches (default: evolve):", default: "evolve")
 pr_target_branch = ask_for_input("Enter target branch for pull requests (default: main):", default: "main")
 
+# Code Heal Directory Configuration
+puts
+puts "🏥 Code Heal Directory Configuration:"
+puts "This directory will store isolated copies of your code for safe healing."
+puts "CodeHealer will clone your current branch here before making fixes."
+puts
+
+code_heal_directory = ask_for_input("Enter code heal directory path (default: /tmp/code_healer_workspaces):", default: "/tmp/code_healer_workspaces")
+auto_cleanup = ask_for_yes_no("Automatically clean up healing workspaces after use?", default: true)
+cleanup_after_hours = ask_for_input("Clean up workspaces after how many hours? (default: 24):", default: "24")
+
 # Business Context
 puts
 puts "💼 Business Context Setup:"
@@ -297,6 +308,14 @@ config_content = <<~YAML
     max_concurrent_healing: 3
     healing_timeout: 300
     retry_attempts: 3
+  
+  # Code Heal Directory Configuration
+  code_heal_directory:
+    path: "#{code_heal_directory}"
+    auto_cleanup: #{auto_cleanup}
+    cleanup_after_hours: #{cleanup_after_hours}
+    max_workspaces: 10
+    clone_strategy: "branch"  # Options: branch, full_repo
 YAML
 
 create_file_with_content('config/code_healer.yml', config_content, dry_run: options[:dry_run])
@@ -366,14 +385,19 @@ else
   puts "4. Start your Rails server: rails s"
   puts
   puts "🔒 Security Notes:"
-  puts "   - .env file contains your actual API keys and is ignored by git"
-  puts "   - .env.example is safe to commit and shows the required format"
-  puts "   - Never commit .env files with real secrets to version control"
-  puts
-  puts "⚙️  Configuration:"
-  puts "   - code_healer.yml contains comprehensive settings with sensible defaults"
-  puts "   - Customize the configuration file as needed for your project"
-  puts "   - All features are pre-configured and ready to use"
+puts "   - .env file contains your actual API keys and is ignored by git"
+puts "   - .env.example is safe to commit and shows the required format"
+puts "   - Never commit .env files with real secrets to version control"
+puts
+puts "🏥 Code Heal Directory:"
+puts "   - Your code will be cloned to: #{code_heal_directory}"
+puts "   - This ensures safe, isolated healing without affecting your running server"
+puts "   - Workspaces are automatically cleaned up after #{cleanup_after_hours} hours"
+puts
+puts "⚙️  Configuration:"
+puts "   - code_healer.yml contains comprehensive settings with sensible defaults"
+puts "   - Customize the configuration file as needed for your project"
+puts "   - All features are pre-configured and ready to use"
   puts
   puts "🌍 Environment Variables:"
   puts "   - Add 'gem \"dotenv-rails\"' to your Gemfile for automatic .env loading"

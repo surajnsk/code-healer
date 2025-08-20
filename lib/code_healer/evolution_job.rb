@@ -9,18 +9,39 @@ class EvolutionJob
     # Reconstruct the error object
     error = reconstruct_error(error_data)
     
-    # Determine evolution strategy
-    evolution_method = CodeHealer::ConfigManager.evolution_method
+    # Create isolated healing workspace
+    workspace_path = create_healing_workspace(class_name, method_name)
     
-    case evolution_method
-    when 'claude_code_terminal'
-      handle_claude_code_evolution(error, class_name, method_name, file_path)
-    when 'api'
-      handle_api_evolution(error, class_name, method_name, file_path)
-    when 'hybrid'
-      handle_hybrid_evolution(error, class_name, method_name, file_path)
-    else
-      puts "❌ Unknown evolution method: #{evolution_method}"
+    begin
+      # Apply fixes in isolated environment
+      success = apply_fixes_in_workspace(workspace_path, error, class_name, method_name)
+      
+      if success
+        # Test fixes in isolated environment
+        test_success = CodeHealer::HealingWorkspaceManager.test_fixes_in_workspace(workspace_path)
+        
+        if test_success
+          # Merge back to main repo
+          healing_branch = CodeHealer::HealingWorkspaceManager.merge_fixes_back(
+            Rails.root.to_s, 
+            workspace_path, 
+            CodeHealer::ConfigManager.git_settings['pr_target_branch'] || 'main'
+          )
+          
+          if healing_branch
+            puts "✅ Fixes applied, tested, and merged successfully! Branch: #{healing_branch}"
+          else
+            puts "⚠️  Fixes applied and tested, but merge failed"
+          end
+        else
+          puts "⚠️  Fixes applied but failed tests, not merging back"
+        end
+      else
+        puts "❌ Failed to apply fixes in workspace"
+      end
+    ensure
+      # Clean up workspace
+      cleanup_workspace(workspace_path)
     end
     
     puts "✅ Evolution Job Completed: #{class_name}##{method_name}"
@@ -31,6 +52,105 @@ class EvolutionJob
   end
 
   private
+
+  def create_healing_workspace(class_name, method_name)
+    puts "🏥 Creating isolated healing workspace for #{class_name}##{method_name}"
+    
+    # Create unique workspace
+    workspace_path = CodeHealer::HealingWorkspaceManager.create_healing_workspace(
+      Rails.root.to_s,
+      nil  # Use current branch
+    )
+    
+    puts "✅ Healing workspace created: #{workspace_path}"
+    workspace_path
+  end
+  
+  def apply_fixes_in_workspace(workspace_path, error, class_name, method_name)
+    puts "🔧 Applying fixes in isolated workspace"
+    
+    # Determine evolution strategy
+    evolution_method = CodeHealer::ConfigManager.evolution_method
+    
+    case evolution_method
+    when 'claude_code_terminal'
+      handle_claude_code_evolution_in_workspace(workspace_path, error, class_name, method_name)
+    when 'api'
+      handle_api_evolution_in_workspace(workspace_path, error, class_name, method_name)
+    when 'hybrid'
+      handle_hybrid_evolution_in_workspace(workspace_path, error, class_name, method_name)
+    else
+      puts "❌ Unknown evolution method: #{evolution_method}"
+      false
+    end
+  end
+  
+  def handle_claude_code_evolution_in_workspace(workspace_path, error, class_name, method_name)
+    puts "🤖 Using Claude Code Terminal for evolution in workspace..."
+    
+    # Change to workspace directory for Claude Code operations
+    Dir.chdir(workspace_path) do
+      success = CodeHealer::ClaudeCodeEvolutionHandler.handle_error_with_claude_code(
+        error, class_name, method_name, nil  # file_path not needed in workspace
+      )
+      
+      if success
+        puts "✅ Claude Code evolution completed successfully in workspace!"
+        true
+      else
+        puts "❌ Claude Code evolution failed in workspace"
+        false
+      end
+    end
+  end
+  
+  def handle_api_evolution_in_workspace(workspace_path, error, class_name, method_name)
+    puts "🌐 Using OpenAI API for evolution in workspace..."
+    
+    # Load business context for API evolution
+    business_context = CodeHealer::BusinessContextManager.get_context_for_error(
+      error, class_name, method_name
+    )
+    
+    puts "📋 Business context loaded for API evolution"
+    
+    # Change to workspace directory for API operations
+    Dir.chdir(workspace_path) do
+      success = CodeHealer::SimpleEvolution.handle_error_with_mcp_intelligence(
+        error, class_name, method_name, nil, business_context  # file_path not needed in workspace
+      )
+      
+      if success
+        puts "✅ API evolution completed successfully in workspace!"
+        true
+      else
+        puts "❌ API evolution failed in workspace"
+        false
+      end
+    end
+  end
+  
+  def handle_hybrid_evolution_in_workspace(workspace_path, error, class_name, method_name)
+    puts "🔄 Using Hybrid approach for evolution in workspace..."
+    
+    begin
+      # Try Claude Code first
+      success = handle_claude_code_evolution_in_workspace(workspace_path, error, class_name, method_name)
+      return success if success
+    rescue => e
+      puts "⚠️  Claude Code failed, falling back to API: #{e.message}"
+    end
+    
+    # Fallback to API
+    handle_api_evolution_in_workspace(workspace_path, error, class_name, method_name)
+  end
+  
+  def cleanup_workspace(workspace_path)
+    return unless workspace_path && Dir.exist?(workspace_path)
+    
+    puts "🧹 Cleaning up healing workspace: #{workspace_path}"
+    CodeHealer::HealingWorkspaceManager.cleanup_workspace(workspace_path)
+  end
 
   def reconstruct_error(error_data)
     # Reconstruct the error object from serialized data
@@ -45,55 +165,5 @@ class EvolutionJob
     error
   end
 
-  def handle_claude_code_evolution(error, class_name, method_name, file_path)
-    puts "🤖 Using Claude Code Terminal for evolution..."
-    
-    # Use the existing Claude Code evolution handler (it's a class method)
-    success = CodeHealer::ClaudeCodeEvolutionHandler.handle_error_with_claude_code(error, class_name, method_name, file_path)
-    
-    if success
-      puts "✅ Claude Code evolution completed successfully!"
-    else
-      puts "❌ Claude Code evolution failed"
-      raise "Claude Code evolution failed for #{class_name}##{method_name}"
-    end
-  end
 
-  def handle_api_evolution(error, class_name, method_name, file_path)
-    puts "🌐 Using OpenAI API for evolution..."
-    
-    # Load business context for API evolution
-    business_context = CodeHealer::BusinessContextManager.get_context_for_error(
-      error, class_name, method_name
-    )
-    
-    puts "📋 Business context loaded for API evolution"
-    
-    # Use the existing MCP evolution handler with business context
-    success = CodeHealer::SimpleEvolution.handle_error_with_mcp_intelligence(
-      error, class_name, method_name, file_path, business_context
-    )
-    
-    if success
-      puts "✅ API evolution completed successfully!"
-    else
-      puts "❌ API evolution failed"
-      raise "API evolution failed for #{class_name}##{method_name}"
-    end
-  end
-
-  def handle_hybrid_evolution(error, class_name, method_name, file_path)
-    puts "🔄 Using Hybrid approach for evolution..."
-    
-    begin
-      # Try Claude Code first
-      success = handle_claude_code_evolution(error, class_name, method_name, file_path)
-      return if success
-    rescue => e
-      puts "⚠️  Claude Code failed, falling back to API: #{e.message}"
-    end
-    
-    # Fallback to API
-    handle_api_evolution(error, class_name, method_name, file_path)
-  end
 end
